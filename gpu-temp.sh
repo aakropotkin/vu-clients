@@ -6,7 +6,7 @@
 : "${DIAL_ID:=1C0028000650564139323920}";
 : "${HUB_KEY:=cTpAWYuRpA2zx75Yh961Cg}";
 : "${BASE_URL:=http://localhost:5340}";
-: "${SLEEP_SECONDS=1}";
+: "${SLEEP_SECONDS=0.3}";
 
 
 # Returns GPU Temperature in Celsius.
