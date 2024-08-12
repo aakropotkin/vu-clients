@@ -30,7 +30,16 @@ set_percent() {
     ;;
   esac
   echo "Setting Dial to $1%" >&2;
-  $CURL -X GET "$BASE_URL/api/v0/dial/$DIAL_ID/set?key=$HUB_KEY&value=$1"
+  $CURL -X GET "$BASE_URL/api/v0/dial/$DIAL_ID/set?key=$HUB_KEY&value=$1";
+  echo '' >&2;
+}
+
+# Set to a brightness ( default 20% )
+set_backlight() {
+  local -i brightness="${1:-20}";
+  $CURL -X GET "$BASE_URL/api/v0/dial/$DIAL_ID/backlight?key=$HUB_KEY&\
+red=$brightness&blue=$brightness&green=$brightness";
+  echo '' >&2;
 }
 
 
@@ -38,6 +47,7 @@ declare -i prev=0;
 declare -i percent;
 
 set_percent 0;
+set_backlight;
 
 while :; do
   percent="$( get_temp_as_percent; )";
@@ -47,3 +57,6 @@ while :; do
   prev="$percent";
   sleep "${SLEEP_SECONDS}s";
 done
+
+# Example of setting background image:
+# curl -X POST -F imgfile=@/home/camus/Downloads/image_pack/gpu-temp.png 'http://localhost:5340/api/v0/dial/1C0028000650564139323920/image/set?key=cTpAWYuRpA2zx75Yh961Cg'
