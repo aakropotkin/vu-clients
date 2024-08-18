@@ -36,6 +36,7 @@ ENVIRONMENT
   REALPATH          Command used as \`realpath' executable.
   CURL              Command used as \`curl' executable.
   BC                Command used as \`bc' executable.
+  PS                Command used as \`ps' executable.
   NVIDIA_SMI        Command used as \`nvidia-smi' executable.
   SENSORS           Command used as \`sensors' executable.
   JQ                Command used as \`jq' executable.
@@ -78,6 +79,7 @@ readonly ID_RAM_LOAD='75002D000650564139323920';
 : "${REALPATH:=realpath}";
 : "${CURL:=curl}";
 : "${BC:=bc}";
+: "${PS:=ps}";
 : "${NVIDIA_SMI:=nvidia-smi}";
 : "${SENSORS:=sensors}";
 : "${JQ:=jq}";
@@ -181,19 +183,35 @@ temp_to_percent() {
     _clamped=80;
   fi
   local -i _scaled;
-  _scaled="$( $BC <<< "$_clamped * 1.25"; )";
+  _scaled="$( $BC <<< "$_clamped * 1.25"|round; )";
   echo "$_scaled";
 }
 
 
 # ---------------------------------------------------------------------------- #
 
-# set_backlight DIAL-ID PERCENT
-# -----------------------------
+# set_backlight DIAL-ID [PERCENT]
+# -------------------------------
 # Set to a brightness for a dial.
 set_backlight() {
+  local -i _brightness;
+  _brightness="${2:-$BRIGHTNESS}";
   $CURL -X GET "$BASE_URL/api/v0/dial/$1/backlight?key=$HUB_KEY&\
-red=$2&blue=$2&green=$2";
+red=$_brightness&blue=$_brightness&green=$_brightness";
+  echo '' >&2;  # Clear STDERR
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+# set_backlight_red DIAL-ID [PERCENT]
+# -----------------------------------
+# Set to a brightness to the color red for a dial.
+set_backlight_red() {
+  local -i _brightness;
+  _brightness="${2:-$BRIGHTNESS}";
+  $CURL -X GET "$BASE_URL/api/v0/dial/$1/backlight?key=$HUB_KEY&\
+red=$_brightness&blue=0&green=0";
   echo '' >&2;  # Clear STDERR
 }
 
@@ -204,14 +222,14 @@ red=$2&blue=$2&green=$2";
 # ------------------------
 # Set a dial's arm to an integer value 0-100.
 set_dial() {
-  case "${1?You must pass a percentage as an integer}" in
+  case "${2?You must pass a percentage as an integer}" in
     [0-9]|[1-9][0-9]|100) :; ;;
     *)
-      echo "You must pass a percentage as an integer}" >&2;
+      echo "You must pass a percentage as an integer" >&2;
       return 1;
     ;;
   esac
-  echo "Setting Dial to $1%" >&2;
+  echo "Setting Dial $1 to $2%" >&2;
   $CURL -X GET "$BASE_URL/api/v0/dial/$1/set?key=$HUB_KEY&value=$2";
   echo '' >&2;
 }
@@ -224,13 +242,46 @@ get_gpu_temp() {
   $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader;
 }
 
+_prev_gpu_temp=0;
+handle_gpu_temp() {
+  local -i _percent;
+  _percent="$( get_gpu_temp|temp_to_percent; )";
+  if [[ "$_prev_gpu_temp" -ne "$_percent" ]]; then
+    set_dial "$ID_GPU_TEMP" "$_percent";
+    if [[ "$_percent" -ge 90 ]] && [[ "$_prev_gpu_temp" -lt 90 ]]; then
+      set_backlight_red "$ID_GPU_TEMP";
+    elif [[ "$_percent" -lt 90 ]] && [[ "$_prev_gpu_temp" -ge 90 ]]; then
+      set_backlight "$ID_GPU_TEMP";
+    elif [[ "$_prev_gpu_temp" -eq 0 ]]; then
+      set_backlight "$ID_GPU_TEMP";
+    fi
+    _prev_gpu_temp="$_percent";
+  fi
+}
+
 
 # ---------------------------------------------------------------------------- #
 
 # Returns CPU Temperature in Celsius.
 get_cpu_temp() {
-  printf '%.*f\n' 0                                                    \
-    "$( $SENSORS -j|$JQ '.["k10temp-pci-00c3"].Tctl.temp1_input'; )";
+  $SENSORS -j|$JQ '.["k10temp-pci-00c3"].Tctl.temp1_input'|round;
+}
+
+_prev_cpu_temp=0;
+handle_cpu_temp() {
+  local -i _percent;
+  _percent="$( get_cpu_temp|temp_to_percent; )";
+  if [[ "$_prev_cpu_temp" -ne "$_percent" ]]; then
+    set_dial "$ID_CPU_TEMP" "$_percent";
+    if [[ "$_percent" -ge 90 ]] && [[ "$_prev_cpu_temp" -lt 90 ]]; then
+      set_backlight_red "$ID_CPU_TEMP";
+    elif [[ "$_percent" -lt 90 ]] && [[ "$_prev_cpu_temp" -ge 90 ]]; then
+      set_backlight "$ID_CPU_TEMP";
+    elif [[ "$_prev_cpu_temp" -eq 0 ]]; then
+      set_backlight "$ID_CPU_TEMP";
+    fi
+    _prev_cpu_temp="$_percent";
+  fi
 }
 
 
@@ -247,6 +298,13 @@ handle_cpu_load() {
   _percent="$( get_cpu_load; )";
   if [[ "$_prev_cpu_load" -ne "$_percent" ]]; then
     set_dial "$ID_CPU_LOAD" "$_percent";
+    if [[ "$_percent" -ge 90 ]] && [[ "$_prev_cpu_load" -lt 90 ]]; then
+      set_backlight_red "$ID_CPU_LOAD";
+    elif [[ "$_percent" -lt 90 ]] && [[ "$_prev_cpu_load" -ge 90 ]]; then
+      set_backlight "$ID_CPU_LOAD";
+    elif [[ "$_prev_cpu_load" -eq 0 ]]; then
+      set_backlight "$ID_CPU_LOAD";
+    fi
     _prev_cpu_load="$_percent";
   fi
 }
@@ -282,10 +340,41 @@ get_ram_percent() {
   $BC -l <<< "$_used_kb / $_total_kb * 100.0"|round;
 }
 
+_prev_ram_load=0;
+handle_ram_load() {
+  local -i _percent;
+  _percent="$( get_ram_percent; )";
+  if [[ "$_prev_ram_load" -ne "$_percent" ]]; then
+    set_dial "$ID_RAM_LOAD" "$_percent";
+    if [[ "$_percent" -ge 90 ]] && [[ "$_prev_ram_load" -lt 90 ]]; then
+      set_backlight_red "$ID_RAM_LOAD";
+    elif [[ "$_percent" -lt 90 ]] && [[ "$_prev_ram_load" -ge 90 ]]; then
+      set_backlight "$ID_RAM_LOAD";
+    elif [[ "$_prev_ram_load" -eq 0 ]]; then
+      set_backlight "$ID_RAM_LOAD";
+    fi
+    _prev_ram_load="$_percent";
+  fi
+}
+
 
 # ---------------------------------------------------------------------------- #
 
-# TODO
+main() {
+  while :; do
+    handle_cpu_load;
+    handle_cpu_temp;
+    handle_gpu_temp;
+    handle_ram_load;
+    sleep "$SLEEP_SECONDS";
+  done
+}
+
+
+# ---------------------------------------------------------------------------- #
+
+main;
+exit;
 
 
 # ---------------------------------------------------------------------------- #
