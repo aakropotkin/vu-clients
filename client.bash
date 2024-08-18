@@ -287,9 +287,11 @@ handle_cpu_temp() {
 
 # ---------------------------------------------------------------------------- #
 
+# FIXME: This is fucked up honestly
+
 # Returns CPU Load as a percentage
 get_cpu_load() {
-  $PS -eo pcpu|$GREP -v '^\(%CPU\| 0.0\)$'|sum|round;
+  $PS -eo pcpu|$GREP '^ '|$GREP -v '^ 0.0$'|sum|round;
 }
 
 _prev_cpu_load=0;
@@ -366,13 +368,14 @@ main() {
     handle_cpu_temp;
     handle_gpu_temp;
     handle_ram_load;
-    sleep "$SLEEP_SECONDS";
+    sleep "${SLEEP_SECONDS}s";
   done
 }
 
 
 # ---------------------------------------------------------------------------- #
 
+set -x;
 main;
 exit;
 
