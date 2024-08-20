@@ -222,13 +222,10 @@ red=$_brightness&blue=0&green=0";
 # ------------------------
 # Set a dial's arm to an integer value 0-100.
 set_dial() {
-  case "${2?You must pass a percentage as an integer}" in
-    [0-9]|[1-9][0-9]|100) :; ;;
-    *)
-      echo "You must pass a percentage as an integer" >&2;
-      return 1;
-    ;;
-  esac
+  local -i _value="$2"
+  if [[ "$_value" -gt 100 ]]; then
+    _value=100;
+  fi
   echo "Setting Dial $1 to $2%" >&2;
   $CURL -X GET "$BASE_URL/api/v0/dial/$1/set?key=$HUB_KEY&value=$2";
   echo '' >&2;
@@ -291,7 +288,7 @@ handle_cpu_temp() {
 
 # Returns CPU Load as a percentage
 get_cpu_load() {
-  $PS -eo pcpu|$GREP '^ '|$GREP -v '^ 0.0$'|sum|round;
+  $PS -eo pcpu|$GREP '\.'|$GREP -v '^ 0.0$'|sum|round;
 }
 
 _prev_cpu_load=0;
