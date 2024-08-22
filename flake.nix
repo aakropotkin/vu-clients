@@ -49,7 +49,7 @@
           cat "$scriptPath" > "$out";
           chmod +x "$out";
         '';
-      } );
+      } ) {};
     };
     overlays.default = overlays.vu-client;
 
