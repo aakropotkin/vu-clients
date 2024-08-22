@@ -11,21 +11,31 @@
                            defaultSystems;
 
     overlays.vu-client = final: prev: {
-      vu-client = final.stdenv.mkDerivation {
+      vu-client = final.callPackage ( {
+        linuxPackages
+      , nvidia_x11 ? linuxPackages.nvidia_x11
+      , gnugrep
+      , coreutils
+      , curl
+      , bc
+      , procps
+      , lm_sensors
+      , jq
+      }: final.stdenv.mkDerivation {
         pname        = "vu-client";
         version      = "0.1.0";
         src          = ./.;
         buildPhase   = ":";
         script = let
           utils = {
-            GREP       = "${final.gnugrep}/bin/grep";
-            REALPATH   = "${final.coreutils}/bin/realpath";
-            CURL       = "${final.curl}/bin/curl";
-            BC         = "${final.bc}/bin/bc";
-            PS         = "${final.procps}/bin/ps";
-            NVIDIA_SMI = "${final.linuxPackages.nvidia_x11}/bin/nvidia-smi";
-            SENSORS    = "${final.lm_sensors}/bin/sensors";
-            JQ         = "${final.jq}/bin/jq";
+            GREP       = "${gnugrep}/bin/grep";
+            REALPATH   = "${coreutils}/bin/realpath";
+            CURL       = "${curl}/bin/curl";
+            BC         = "${bc}/bin/bc";
+            PS         = "${procps}/bin/ps";
+            NVIDIA_SMI = "${nvidia_x11.bin}/bin/nvidia-smi";
+            SENSORS    = "${lm_sensors}/bin/sensors";
+            JQ         = "${jq}/bin/jq";
           };
           inject = let
             proc = xs: name: xs + ''
@@ -39,7 +49,7 @@
           cat "$scriptPath" > "$out";
           chmod +x "$out";
         '';
-      };
+      } );
     };
     overlays.default = overlays.vu-client;
 
@@ -50,11 +60,18 @@
         enable = lib.mkEnableOption "Enable VU-client service";
 
         package = lib.mkOption {
-          type        = lib.types.package;
-          default     = pkgs.vu-client;
-          defaultText = "pkgs.vu-client";
+          type    = lib.types.package;
+          default = pkgs.vu-client.override {
+            nvidia_x11 = config.hardware.nvidia.package;
+          };
+          defaultText = ''
+            pkgs.vu-client.override {
+              nvidia_x11 = config.hardware.nvidia.package;
+            };
+          '';
           description = "Set the VU client package to use.";
         };
+
       };
 
       config = lib.mkIf cfg.enable {

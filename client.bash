@@ -7,6 +7,7 @@
 
 set -eu;
 set -o pipefail;
+set -x
 
 
 # ---------------------------------------------------------------------------- #
@@ -171,13 +172,13 @@ sum() {
 
 # Limit temperatures between 20-100 C and then map them to a 0-100 scale.
 temp_to_percent() {
-  local -i _temp;
+  local -i _temp=0;
   if [[ "$#" -gt 0 ]]; then
     _temp="$1";
   else
     read -r _temp;
   fi
-  local -i _clamped;
+  local -i _clamped=0;
   _clamped="$(( _temp - 20 ))";
   if [[ "$_clamped" -gt 80 ]]; then
     _clamped=80;
@@ -241,7 +242,7 @@ get_gpu_temp() {
 
 _prev_gpu_temp=0;
 handle_gpu_temp() {
-  local -i _percent;
+  local -i _percent=0;
   _percent="$( get_gpu_temp|temp_to_percent; )";
   if [[ "$_prev_gpu_temp" -ne "$_percent" ]]; then
     set_dial "$ID_GPU_TEMP" "$_percent";
@@ -266,7 +267,7 @@ get_cpu_temp() {
 
 _prev_cpu_temp=0;
 handle_cpu_temp() {
-  local -i _percent;
+  local -i _percent=0;
   _percent="$( get_cpu_temp|temp_to_percent; )";
   if [[ "$_prev_cpu_temp" -ne "$_percent" ]]; then
     set_dial "$ID_CPU_TEMP" "$_percent";
@@ -293,7 +294,7 @@ get_cpu_load() {
 
 _prev_cpu_load=0;
 handle_cpu_load() {
-  local -i _percent;
+  local -i _percent=0;
   _percent="$( get_cpu_load; )";
   if [[ "$_prev_cpu_load" -ne "$_percent" ]]; then
     set_dial "$ID_CPU_LOAD" "$_percent";
@@ -315,21 +316,22 @@ handle_cpu_load() {
 # For my box this represents 0-64Gb but if I upgrade that later all I need to
 # do is update the dial's image.
 get_ram_percent() {
-  local -i _total_kb;
-  local -i _avail_kb;
-  local -i _used_kb;
-  while read -r line; do
-    case "$line" in
+  local _line='';
+  local -i _total_kb=0;
+  local -i _avail_kb=0;
+  local -i _used_kb=0;
+  while read -r _line; do
+    case "$_line" in
       MemTotal:*)
-        line="${line% kB}";
-        _total_kb="${line##* }";
+        _line="${_line% kB}";
+        _total_kb="${_line##* }";
       ;;
       MemFree:*)
         :;
       ;;
       MemAvailable:*)
-        line="${line% kB}";
-        _avail_kb="${line##* }";
+        _line="${_line% kB}";
+        _avail_kb="${_line##* }";
         break;
       ;;
       *) break; ;;  # Unreachable
@@ -341,7 +343,7 @@ get_ram_percent() {
 
 _prev_ram_load=0;
 handle_ram_load() {
-  local -i _percent;
+  local -i _percent=0;
   _percent="$( get_ram_percent; )";
   if [[ "$_prev_ram_load" -ne "$_percent" ]]; then
     set_dial "$ID_RAM_LOAD" "$_percent";
