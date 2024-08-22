@@ -60,15 +60,9 @@
         enable = lib.mkEnableOption "Enable VU-client service";
 
         package = lib.mkOption {
-          type    = lib.types.package;
-          default = pkgs.vu-client.override {
-            nvidia_x11 = config.hardware.nvidia.package;
-          };
-          defaultText = ''
-            pkgs.vu-client.override {
-              nvidia_x11 = config.hardware.nvidia.package;
-            };
-          '';
+          type        = lib.types.package;
+          default     = pkgs.vu-client;
+          defaultText = "pkgs.vu-client";
           description = "Set the VU client package to use.";
         };
 
