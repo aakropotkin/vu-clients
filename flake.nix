@@ -15,8 +15,32 @@
         pname        = "vu-client";
         version      = "0.1.0";
         src          = ./.;
-        buildPhase   = ": # TODO";
-        installPhase = "touch "$out";
+        buildPhase   = ":";
+        script = let
+          utils = {
+            GREP       = "${final.gnugrep}/bin/grep";
+            REALPATH   = "${final.coreutils}/bin/realpath";
+            CURL       = "${final.curl}/bin/curl";
+            BC         = "${final.bc}/bin/bc";
+            PS         = "${final.procps}/bin/ps";
+            NVIDIA_SMI = "${final.nvidia-x11}/bin/nvidia-smi";
+            SENSORS    = "${final.lm-sensors}/bin/sensors";
+            JQ         = "${final.jq}/bin/jq";
+          };
+          inject = let
+            proc = xs: name: xs + ''
+              ${name}='${builtins.getAttr name utils}';
+            '';
+          in builtins.foldl' proc "" ( builtins.attrNames utils );
+          raw = builtins.readFile ./client.bash;
+        in builtins.replaceStrings ["@BEGIN_INJECT_UTILS@"] [inject];
+        passAsFile = ["script"];
+        installPhase = ''
+          while read -r line; do
+            echo "$line" >> "$out";
+          done < "$scriptPath"
+          chmod +x "$out";
+        '';
       };
     };
     overlays.default = overlays.vu-client;
