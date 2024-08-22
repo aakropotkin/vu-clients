@@ -10,7 +10,7 @@
                            {}
                            defaultSystems;
 
-    overlays.vu-client = final: prev: {
+    overlays.vu-clients = final: prev: {
       vu-client = final.callPackage ( {
         linuxPackages
       , nvidia_x11 ? linuxPackages.nvidia_x11
