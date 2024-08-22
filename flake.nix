@@ -23,8 +23,8 @@
             CURL       = "${final.curl}/bin/curl";
             BC         = "${final.bc}/bin/bc";
             PS         = "${final.procps}/bin/ps";
-            NVIDIA_SMI = "${final.nvidia-x11}/bin/nvidia-smi";
-            SENSORS    = "${final.lm-sensors}/bin/sensors";
+            NVIDIA_SMI = "${final.linuxPackages.nvidia_x11}/bin/nvidia-smi";
+            SENSORS    = "${final.lm_sensors}/bin/sensors";
             JQ         = "${final.jq}/bin/jq";
           };
           inject = let
@@ -33,12 +33,10 @@
             '';
           in builtins.foldl' proc "" ( builtins.attrNames utils );
           raw = builtins.readFile ./client.bash;
-        in builtins.replaceStrings ["@BEGIN_INJECT_UTILS@"] [inject];
+        in builtins.replaceStrings ["#@BEGIN_INJECT_UTILS@"] [inject] raw;
         passAsFile = ["script"];
         installPhase = ''
-          while read -r line; do
-            echo "$line" >> "$out";
-          done < "$scriptPath"
+          cat "$scriptPath" > "$out";
           chmod +x "$out";
         '';
       };

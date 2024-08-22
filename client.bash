@@ -74,7 +74,7 @@ readonly ID_RAM_LOAD='75002D000650564139323920';
 
 # ---------------------------------------------------------------------------- #
 
-# @BEGIN_INJECT_UTILS@
+#@BEGIN_INJECT_UTILS@
 : "${GREP:=grep}";
 : "${REALPATH:=realpath}";
 : "${CURL:=curl}";
