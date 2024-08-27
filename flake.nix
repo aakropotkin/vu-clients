@@ -46,8 +46,9 @@
         in builtins.replaceStrings ["#@BEGIN_INJECT_UTILS@"] [inject] raw;
         passAsFile = ["script"];
         installPhase = ''
-          cat "$scriptPath" > "$out";
-          chmod +x "$out";
+          mkdir -p "$out/bin";
+          cat "$scriptPath" > "$out/bin/$pname";
+          chmod +x "$out/bin/$pname";
         '';
       } ) {};
     };
