@@ -34,6 +34,7 @@
             BC         = "${bc}/bin/bc";
             PS         = "${procps}/bin/ps";
             #NVIDIA_SMI = "${nvidia_x11.bin}/bin/nvidia-smi";
+            NVIDIA_SMI = "/run/current-system/sw/bin/nvidia-smi";
             SENSORS    = "${lm_sensors}/bin/sensors";
             JQ         = "${jq}/bin/jq";
           };
