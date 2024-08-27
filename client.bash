@@ -171,13 +171,13 @@ sum() {
 
 # Limit temperatures between 20-100 C and then map them to a 0-100 scale.
 temp_to_percent() {
-  local -i _temp=0;
+  local _temp=0;
   if [[ "$#" -gt 0 ]]; then
     _temp="$1";
   else
     read -r _temp;
   fi
-  local -i _clamped=0;
+  local _clamped=0;
   _clamped="$(( _temp - 20 ))";
   if [[ "$_clamped" -gt 80 ]]; then
     _clamped=80;
@@ -242,6 +242,7 @@ get_gpu_temp() {
 _prev_gpu_temp=0;
 handle_gpu_temp() {
   local -i _percent=0;
+  get_gpu_temp >&2;
   _percent="$( get_gpu_temp|temp_to_percent; )";
   if [[ "$_prev_gpu_temp" -ne "$_percent" ]]; then
     set_dial "$ID_GPU_TEMP" "$_percent";
