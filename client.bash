@@ -236,7 +236,7 @@ set_dial() {
 
 # Returns GPU Temperature in Celsius.
 get_gpu_temp() {
-  $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader||echo 0;
+  $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader||echo 20;
 }
 
 _prev_gpu_temp=0;
