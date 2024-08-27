@@ -171,13 +171,13 @@ sum() {
 
 # Limit temperatures between 20-100 C and then map them to a 0-100 scale.
 temp_to_percent() {
-  local _temp=0;
+  local -i _temp=0;
   if [[ "$#" -gt 0 ]]; then
     _temp="$1";
   else
     read -r _temp;
   fi
-  local _clamped=0;
+  local -i _clamped=0;
   _clamped="$(( _temp - 20 ))";
   if [[ "$_clamped" -gt 80 ]]; then
     _clamped=80;
@@ -236,7 +236,9 @@ set_dial() {
 
 # Returns GPU Temperature in Celsius.
 get_gpu_temp() {
-  $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader||echo 20;
+  if ! $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader; then
+    echo 20;
+  fi
 }
 
 _prev_gpu_temp=0;
@@ -373,6 +375,7 @@ main() {
 
 # ---------------------------------------------------------------------------- #
 
+set -x;
 main;
 exit;
 
