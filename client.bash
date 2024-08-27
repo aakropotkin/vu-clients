@@ -37,7 +37,6 @@ ENVIRONMENT
   CURL              Command used as \`curl' executable.
   BC                Command used as \`bc' executable.
   PS                Command used as \`ps' executable.
-  NVIDIA_SMI        Command used as \`nvidia-smi' executable.
   SENSORS           Command used as \`sensors' executable.
   JQ                Command used as \`jq' executable.
 ";
@@ -80,7 +79,6 @@ readonly ID_RAM_LOAD='75002D000650564139323920';
 : "${CURL:=curl}";
 : "${BC:=bc}";
 : "${PS:=ps}";
-: "${NVIDIA_SMI:=nvidia-smi}";
 : "${SENSORS:=sensors}";
 : "${JQ:=jq}";
 
@@ -236,9 +234,7 @@ set_dial() {
 
 # Returns GPU Temperature in Celsius.
 get_gpu_temp() {
-  if ! $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader; then
-    echo 20;
-  fi
+  $SENSORS -j|$JQ '.["mt7921_phy0-pci-5f00"].temp1.temp1_input'|round;
 }
 
 _prev_gpu_temp=0;
@@ -375,7 +371,6 @@ main() {
 
 # ---------------------------------------------------------------------------- #
 
-set -x;
 main;
 exit;
 

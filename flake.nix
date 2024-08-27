@@ -13,7 +13,6 @@
     overlays.vu-client = final: prev: {
       vu-client = final.callPackage ( {
         linuxPackages
-      , nvidia_x11 ? linuxPackages.nvidia_x11
       , gnugrep
       , coreutils
       , curl
@@ -33,8 +32,6 @@
             CURL       = "${curl}/bin/curl";
             BC         = "${bc}/bin/bc";
             PS         = "${procps}/bin/ps";
-            #NVIDIA_SMI = "${nvidia_x11.bin}/bin/nvidia-smi";
-            NVIDIA_SMI = "/run/current-system/sw/bin/nvidia-smi";
             SENSORS    = "${lm_sensors}/bin/sensors";
             JQ         = "${jq}/bin/jq";
           };
