@@ -182,7 +182,7 @@ temp_to_percent() {
   if [[ "$_clamped" -gt 80 ]]; then
     _clamped=80;
   fi
-  local -i _scaled;
+  local -i _scaled=0;
   _scaled="$( $BC <<< "$_clamped * 1.25"|round; )";
   echo "$_scaled";
 }
