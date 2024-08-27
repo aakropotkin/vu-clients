@@ -236,13 +236,12 @@ set_dial() {
 
 # Returns GPU Temperature in Celsius.
 get_gpu_temp() {
-  $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader;
+  $NVIDIA_SMI --query-gpu=temperature.gpu --format=csv,noheader||echo 0;
 }
 
 _prev_gpu_temp=0;
 handle_gpu_temp() {
   local -i _percent=0;
-  get_gpu_temp >&2;
   _percent="$( get_gpu_temp|temp_to_percent; )";
   if [[ "$_prev_gpu_temp" -ne "$_percent" ]]; then
     set_dial "$ID_GPU_TEMP" "$_percent";
@@ -374,7 +373,6 @@ main() {
 
 # ---------------------------------------------------------------------------- #
 
-set -x;
 main;
 exit;
 
