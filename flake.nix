@@ -33,7 +33,7 @@
             CURL       = "${curl}/bin/curl";
             BC         = "${bc}/bin/bc";
             PS         = "${procps}/bin/ps";
-            NVIDIA_SMI = "${nvidia_x11.bin}/bin/nvidia-smi";
+            #NVIDIA_SMI = "${nvidia_x11.bin}/bin/nvidia-smi";
             SENSORS    = "${lm_sensors}/bin/sensors";
             JQ         = "${jq}/bin/jq";
           };
@@ -100,8 +100,6 @@
       inherit (pkgsFor) vu-client;
       default = pkgsFor.vu-client;
     } );
-
-
 
   };
 
